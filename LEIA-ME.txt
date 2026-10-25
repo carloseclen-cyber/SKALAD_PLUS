@@ -1,0 +1,17 @@
+SKALAD — dashboard, usuários e QR Code pelo celular
+
+1. Faça uma cópia de segurança da pasta atual e do banco `skalad_db`.
+2. Copie os arquivos desta pasta para C:\xampp\htdocs\skalad, substituindo os arquivos correspondentes.
+3. Ligue Apache e MySQL no XAMPP.
+4. Abra http://localhost/skalad/ (não abra o HTML diretamente).
+5. Entre com sua conta atual. Se for uma instalação nova, o PHP cria admin@skalad.com / 1234.
+
+O que mudou:
+- Dashboard com gráfico de entradas/saídas dos últimos 7 dias, gráfico da situação do estoque e alertas reais do banco.
+- Configurações de usuários com cadastrar, editar, ativar/desativar e excluir. Não é possível excluir/desativar o usuário conectado.
+- QR Code pode ser lido pela câmera em navegadores compatíveis; após identificar o produto, permite registrar entrada ou saída e grava a movimentação no banco.
+- Os gráficos são desenhados diretamente pelo JavaScript do Skalad, sem depender do Chart.js externo.
+- A leitura de QR Code usa a câmera e a API BarcodeDetector do navegador; recomenda-se Google Chrome atualizado.
+- Mantém os nomes de arquivo e o banco `skalad_db`.
+
+Importante: o acesso à câmera exige HTTPS ou localhost e permissão do navegador. No celular, abrir um endereço como http://192.168.x.x não é suficiente: precisa HTTPS. Faça backup antes de substituir arquivos. O código foi validado sintaticamente, mas precisa ser testado no seu XAMPP com seu banco real.

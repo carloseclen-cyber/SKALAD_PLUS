@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKALAD</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loginPage" class="login-page">
+    <div class="login-box">
+        <div class="login-logo">SKA<span>LAD</span></div>
+        <p class="login-sub">Controle de estoque</p>
+
+        <form id="loginForm">
+            <div class="field">
+                <label for="loginEmail">E-mail</label>
+                <input id="loginEmail" type="email" required placeholder="seu@email.com">
+            </div>
+
+            <div class="field">
+                <label for="loginSenha">Senha</label>
+                <input id="loginSenha" type="password" required placeholder="••••••••">
+            </div>
+
+            <button class="btn" type="submit">Entrar</button>
+            <div id="loginMessage" class="message"></div>
+        </form>
+
+        <p class="hint">Usuário inicial: admin@skalad.com / 1234</p>
+    </div>
+</div>
+
+<div id="app" class="app hidden">
+
+    <aside class="sidebar">
+        <div class="logo">SKA<span>LAD</span></div>
+
+        <nav class="nav">
+            <a href="#" class="nav-link active" data-page="dashboard">Dashboard</a>
+            <a href="#" class="nav-link" data-page="estoque">Estoque</a>
+            <a href="#" class="nav-link" data-page="movimentacoes">Movimentações</a>
+            <a href="#" class="nav-link" data-page="qr">QR Code</a>
+            <a href="#" class="nav-link" data-page="alertas">Alertas</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="#" class="nav-link" data-page="configuracoes">⚙ Configurações</a>
+            <button id="logoutBtn" class="logout">Sair</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="title">
+                <h1 id="pageTitle">Dashboard</h1>
+                <p id="pageDescription">Visão geral do estoque.</p>
+            </div>
+            <div class="user">
+                <strong id="loggedUser">Administrador</strong>
+            </div>
+        </header>
+
+        <!-- DASHBOARD -->
+        <section id="page-dashboard" class="page">
+            <div class="dashboard-metrics">
+                <div class="metric">
+                    <span>Produtos</span>
+                    <strong id="kpiProdutos">0</strong>
+                </div>
+
+                <div class="metric">
+                    <span>Quantidade em estoque</span>
+                    <strong id="kpiQuantidade">0</strong>
+                </div>
+
+                <div class="metric">
+                    <span>Estoque baixo</span>
+                    <strong id="kpiBaixo">0</strong>
+                </div>
+
+                <div class="metric">
+                    <span>Críticos</span>
+                    <strong id="kpiCriticos">0</strong>
+                </div>
+            </div>
+
+            <div class="grid dashboard-grid dashboard-charts">
+                <div class="card">
+                    <h2>Entradas e saídas — últimos 7 dias</h2>
+                    <canvas id="graficoMovimentacoes" aria-label="Gráfico de entradas e saídas nos últimos sete dias" role="img"></canvas>
+                </div>
+                <div class="card">
+                    <h2>Situação do estoque</h2>
+                    <canvas id="graficoEstoque" aria-label="Gráfico da situação atual do estoque" role="img"></canvas>
+                </div>
+            </div>
+
+            <div class="grid dashboard-grid">
+                <div class="card">
+                    <h2>Alertas que precisam de atenção</h2>
+                    <div id="dashboardAlertas"></div>
+                    <button class="btn secondary" type="button" id="verTodosAlertasBtn">Ver todos os alertas</button>
+                </div>
+                <div class="card">
+                    <h2>Últimas movimentações</h2>
+                    <div id="dashboardMovimentacoes"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ESTOQUE UNIFICADO -->
+        <section id="page-estoque" class="page hidden">
+            <div class="page-actions">
+                <div>
+                    <h2></h2>
+                    <p class="muted"></p>
+                </div>
+                <button class="btn" id="novoProdutoBtn">+ Novo produto</button>
+            </div>
+
+            <div class="card">
+                <div class="toolbar">
+                    <input id="buscaProduto" class="search" type="search" placeholder="Buscar produto, categoria ou localização...">
+                    <select id="filtroStatus">
+                        <option value="todos">Todos os status</option>
+                        <option value="normal">Normal</option>
+                        <option value="baixo">Estoque baixo</option>
+                        <option value="critico">Crítico</option>
+                    </select>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Categoria</th>
+                                <th>Preço</th>
+                                <th>Quantidade</th>
+                                <th>Mínimo</th>
+                                <th>Localização</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaEstoque"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- MOVIMENTAÇÕES -->
+        <section id="page-movimentacoes" class="page hidden">
+            <div class="page-actions">
+                <div>
+                    <h2></h2>
+                    <p class="muted"></p>
+                </div>
+            </div>
+
+            <div class="grid detail">
+                <div class="card">
+                    <h2>Nova movimentação</h2>
+                    <form id="movimentacaoForm">
+                        <div class="field">
+                            <label for="movProduto">Produto</label>
+                            <select id="movProduto" required></select>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="movTipo">Tipo</label>
+                                <select id="movTipo">
+                                    <option value="entrada">Entrada</option>
+                                    <option value="saida">Saída</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label for="movQuantidade">Quantidade</label>
+                                <input id="movQuantidade" type="number" min="1" required>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="movObservacao">Observação</label>
+                            <input id="movObservacao" type="text" placeholder="Ex.: compra, venda, ajuste...">
+                        </div>
+
+                        <button class="btn" type="submit">Registrar</button>
+                        <div id="movMessage" class="message"></div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Histórico</h2>
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Produto</th>
+                                    <th>Tipo</th>
+                                    <th>Qtd.</th>
+                                    <th>Observação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaMovimentacoes"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- QR CODE -->
+        <section id="page-qr" class="page hidden">
+            <div class="page-actions">
+                <div>
+                    <h2></h2>
+                    <p class="muted"></p>
+                </div>
+            </div>
+
+            <div class="grid qr-layout">
+                <div class="card">
+                    <h2>Identificação do produto</h2>
+                    <div class="field">
+                        <label for="qrProduto">Produto</label>
+                        <select id="qrProduto"></select>
+                    </div>
+                    <div class="actions">
+                        <button class="btn" id="gerarQrBtn">Gerar QR Code</button>
+                    </div>
+                    <p class="hint">O QR Code usa o código interno do produto para identificação.</p>
+                </div>
+
+                <div class="card qr-box">
+                    <div id="qrArea">
+                        <p class="muted">Selecione um produto e gere o QR Code.</p>
+                    </div>
+                </div>
+
+                <div class="card mobile-scanner-card">
+                    <h2>Usar a câmera do celular</h2>
+                    <p class="muted">Abra a câmera do celular para ler o QR Code do produto e registrar uma entrada ou saída.</p>
+                    <div class="actions">
+                        <button class="btn" id="iniciarCameraBtn" type="button">Abrir câmera</button>
+                        <button class="btn secondary" id="pararCameraBtn" type="button">Parar câmera</button>
+                    </div>
+                    <div id="qrCameraLeitor" class="camera-reader"></div>
+                    <div id="resultadoQr" class="hint" role="status" aria-live="polite">Use Google Chrome atualizado e permita a câmera. O acesso exige HTTPS ou localhost; no celular, use HTTPS.</div>
+                    <div id="movimentoQrRapido" class="quick-movement hidden">
+                        <h3 id="produtoQrEncontrado">Produto identificado</h3>
+                        <p id="estoqueQrAtual" class="muted"></p>
+                        <div class="field">
+                            <label for="qrTipoMovimento">Operação</label>
+                            <select id="qrTipoMovimento"><option value="entrada">Registrar entrada</option><option value="saida">Registrar saída</option></select>
+                        </div>
+                        <div class="field">
+                            <label for="qrQuantidadeMovimento">Quantidade</label>
+                            <input id="qrQuantidadeMovimento" type="number" min="1" value="1" required>
+                        </div>
+                        <div class="field">
+                            <label for="qrObservacaoMovimento">Observação (opcional)</label>
+                            <input id="qrObservacaoMovimento" maxlength="255" placeholder="Ex.: reposição, retirada">
+                        </div>
+                        <button class="btn" id="registrarQrMovimentoBtn" type="button">Confirmar movimentação</button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ALERTAS -->
+        <section id="page-alertas" class="page hidden">
+            <div class="page-actions">
+                <div>
+                    <h2></h2>
+                    <p class="muted"></p>
+                </div>
+            </div>
+            <div class="card">
+                <div id="listaAlertas"></div>
+            </div>
+        </section>
+
+        <!-- CONFIGURAÇÕES -->
+        <section id="page-configuracoes" class="page hidden">
+            <div class="page-actions">
+                <div>
+                    <h2></h2>
+                    <p class="muted"></p>
+                </div>
+                <button class="btn" id="novoUsuarioBtn">+ Cadastrar usuário</button>
+            </div>
+
+            <div class="card">
+                <h2>Usuários</h2>
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Perfil</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaUsuarios"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- MODAL PRODUTO -->
+<div id="produtoModal" class="modal hidden">
+    <div class="modal-box">
+        <button class="modal-close" data-close="produtoModal">×</button>
+        <h2 id="produtoModalTitulo">Novo produto</h2>
+
+        <form id="produtoForm">
+            <input type="hidden" id="produtoId">
+
+            <div class="form-grid">
+                <div class="field">
+                    <label for="produtoNome">Produto</label>
+                    <input id="produtoNome" required>
+                </div>
+
+                <div class="field">
+                    <label for="produtoCategoria">Categoria</label>
+                    <input id="produtoCategoria" required>
+                </div>
+
+                <div class="field">
+                    <label for="produtoPreco">Preço</label>
+                    <input id="produtoPreco" type="number" min="0" step="0.01" required>
+                </div>
+
+                <div class="field">
+                    <label for="produtoQuantidade">Quantidade</label>
+                    <input id="produtoQuantidade" type="number" min="0" required>
+                </div>
+
+                <div class="field">
+                    <label for="produtoMinimo">Estoque mínimo</label>
+                    <input id="produtoMinimo" type="number" min="0" required>
+                </div>
+
+                <div class="field">
+                    <label for="produtoLocalizacao">Localização</label>
+                    <input id="produtoLocalizacao" placeholder="Ex.: A-01">
+                </div>
+
+                <div class="field" style="grid-column: 1 / -1;">
+                    <label for="produtoObservacaoLocal">Observação da localização</label>
+                    <input id="produtoObservacaoLocal" maxlength="255" placeholder="Ex.: Prateleira 3 / gaveta 2">
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn">Salvar produto</button>
+                <button type="button" class="btn secondary" data-close="produtoModal">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL USUÁRIO -->
+<div id="usuarioModal" class="modal hidden">
+    <div class="modal-box">
+        <button class="modal-close" data-close="usuarioModal">×</button>
+        <h2 id="usuarioModalTitulo">Cadastrar usuário</h2>
+
+        <form id="usuarioForm">
+            <input type="hidden" id="usuarioId">
+
+            <div class="field">
+                <label for="usuarioNome">Nome</label>
+                <input id="usuarioNome" required>
+            </div>
+
+            <div class="field">
+                <label for="usuarioEmail">E-mail</label>
+                <input id="usuarioEmail" type="email" required>
+            </div>
+
+            <div class="field">
+                <label for="usuarioSenha">Senha</label>
+                <input id="usuarioSenha" type="password" minlength="4" placeholder="Preencha para definir ou trocar a senha">
+                <small class="muted">Ao editar, deixe em branco para manter a senha atual.</small>
+            </div>
+
+            <div class="field">
+                <label for="usuarioPerfil">Perfil</label>
+                <select id="usuarioPerfil">
+                    <option value="Administrador">Administrador</option>
+                    <option value="Operador">Operador</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="usuarioAtivo">Status</label>
+                <select id="usuarioAtivo">
+                    <option value="true">Ativo</option>
+                    <option value="false">Inativo</option>
+                </select>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn">Salvar usuário</button>
+                <button type="button" class="btn secondary" data-close="usuarioModal">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
